@@ -89,6 +89,7 @@ Example:
   }
 ]
 
+```
 No pipeline logic needs to change when adding new applications.
 
 ---
