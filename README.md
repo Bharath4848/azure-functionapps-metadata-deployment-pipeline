@@ -88,3 +88,115 @@ Example:
     "resourceGroup": "rg-functionapps-dev"
   }
 ]
+
+No pipeline logic needs to change when adding new applications.
+
+3. Deployment Flow Per Application
+
+For each selected Function App:
+
+Restore NuGet packages
+
+Build in Release mode
+
+Publish artifacts
+
+Create deployment ZIP
+
+Deploy to DevTest slot
+
+Deploy to Staging slot
+
+Swap Staging → Production
+
+Deployment Strategy
+
+This implementation follows a safe release approach:
+
+DevTest for validation
+
+Staging for pre-production verification
+
+Slot swap to Production
+
+Zero downtime
+
+Instant rollback capability
+
+Adding a New Function App
+
+Add a boolean parameter in azure-pipelines.yml
+
+Add a new entry in functionapps.json
+
+Commit changes
+
+No changes required to deployment logic.
+
+Technologies Used
+
+Azure DevOps YAML Pipelines
+
+Azure CLI
+
+PowerShell
+
+.NET 8
+
+Azure Function Apps
+
+Deployment Slots
+
+JSON Metadata Configuration
+
+Use Cases
+
+This template is ideal for:
+
+Teams managing multiple Azure Function Apps
+
+Platform engineering teams standardizing CI/CD
+
+Enterprises replacing manual Visual Studio publish workflows
+
+DevOps engineers building scalable deployment templates
+
+Prerequisites
+
+Before using this template, configure:
+
+Azure DevOps Service Connection
+
+Target Azure Resource Groups
+
+Azure Function Apps with deployment slots
+
+Artifact feeds (if applicable)
+
+Using This as a Template
+
+Click "Use this template"
+
+Create your repository
+
+Update:
+
+Service connection name
+
+Resource group names
+
+Function app names
+
+Run the pipeline manually
+
+Benefits
+
+Centralized release management
+
+Reduced manual deployment errors
+
+Consistent deployment process
+
+Production-safe release flow
+
+Scalable architecture for growing systems
