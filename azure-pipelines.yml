@@ -7,7 +7,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   dotNetVersion: '8.0.x'
-  azureServiceConnection: 'Yaml Functions'
+  azureServiceConnection: 'Your service connection'
 
 # ============================================================
 #  Parameters
@@ -477,4 +477,5 @@ stages:
               }
               catch {
                   Write-Error "Slot swap failed: $($_.Exception.Message)"
+
               }
