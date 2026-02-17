@@ -147,4 +147,39 @@ No changes are required to deployment logic.
 This template is ideal for:
 
 - Teams managing multiple Azure Function Apps  
-- Plat
+- Platform engineering teams standardizing CI/CD  
+- Enterprises replacing manual Visual Studio publish workflows  
+- DevOps engineers building scalable deployment templates  
+
+---
+
+### Prerequisites
+
+Before using this template, configure:
+
+- Azure DevOps Service Connection  
+- Target Azure Resource Groups  
+- Azure Function Apps with deployment slots  
+- Artifact feeds (if applicable)  
+
+---
+
+### Using This as a Template
+
+1. Click **"Use this template"**  
+2. Create your repository  
+3. Update:
+   - Service connection name  
+   - Resource group names  
+   - Function app names  
+4. Run the pipeline manually  
+
+---
+
+### Benefits
+
+- Centralized release management  
+- Reduced manual deployment errors  
+- Consistent deployment process  
+- Production-safe release flow  
+- Scalable architecture for growing systems 
