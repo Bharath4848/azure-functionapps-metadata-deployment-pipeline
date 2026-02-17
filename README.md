@@ -91,112 +91,59 @@ Example:
 
 No pipeline logic needs to change when adding new applications.
 
-3. Deployment Flow Per Application
+---
+
+## 3. Deployment Flow Per Application
 
 For each selected Function App:
 
-Restore NuGet packages
+1. Restore NuGet packages  
+2. Build in Release mode  
+3. Publish artifacts  
+4. Create deployment ZIP  
+5. Deploy to DevTest slot  
+6. Deploy to Staging slot  
+7. Swap Staging → Production  
 
-Build in Release mode
+---
 
-Publish artifacts
-
-Create deployment ZIP
-
-Deploy to DevTest slot
-
-Deploy to Staging slot
-
-Swap Staging → Production
-
-Deployment Strategy
+## Deployment Strategy
 
 This implementation follows a safe release approach:
 
-DevTest for validation
+- DevTest for validation  
+- Staging for pre-production verification  
+- Slot swap to Production  
+- Zero downtime  
+- Instant rollback capability  
 
-Staging for pre-production verification
+---
 
-Slot swap to Production
+## Adding a New Function App
 
-Zero downtime
+1. Add a boolean parameter in `azure-pipelines.yml`  
+2. Add a new entry in `functionapps.json`  
+3. Commit changes  
 
-Instant rollback capability
+No changes are required to deployment logic.
 
-Adding a New Function App
+---
 
-Add a boolean parameter in azure-pipelines.yml
+## Technologies Used
 
-Add a new entry in functionapps.json
+- Azure DevOps YAML Pipelines  
+- Azure CLI  
+- PowerShell  
+- .NET 8  
+- Azure Function Apps  
+- Deployment Slots  
+- JSON Metadata Configuration  
 
-Commit changes
+---
 
-No changes required to deployment logic.
-
-Technologies Used
-
-Azure DevOps YAML Pipelines
-
-Azure CLI
-
-PowerShell
-
-.NET 8
-
-Azure Function Apps
-
-Deployment Slots
-
-JSON Metadata Configuration
-
-Use Cases
+## Use Cases
 
 This template is ideal for:
 
-Teams managing multiple Azure Function Apps
-
-Platform engineering teams standardizing CI/CD
-
-Enterprises replacing manual Visual Studio publish workflows
-
-DevOps engineers building scalable deployment templates
-
-Prerequisites
-
-Before using this template, configure:
-
-Azure DevOps Service Connection
-
-Target Azure Resource Groups
-
-Azure Function Apps with deployment slots
-
-Artifact feeds (if applicable)
-
-Using This as a Template
-
-Click "Use this template"
-
-Create your repository
-
-Update:
-
-Service connection name
-
-Resource group names
-
-Function app names
-
-Run the pipeline manually
-
-Benefits
-
-Centralized release management
-
-Reduced manual deployment errors
-
-Consistent deployment process
-
-Production-safe release flow
-
-Scalable architecture for growing systems
+- Teams managing multiple Azure Function Apps  
+- Plat
