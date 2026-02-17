@@ -93,7 +93,7 @@ No pipeline logic needs to change when adding new applications.
 
 ---
 
-## 3. Deployment Flow Per Application
+### 3. Deployment Flow Per Application
 
 For each selected Function App:
 
@@ -107,7 +107,7 @@ For each selected Function App:
 
 ---
 
-## Deployment Strategy
+### Deployment Strategy
 
 This implementation follows a safe release approach:
 
@@ -119,7 +119,7 @@ This implementation follows a safe release approach:
 
 ---
 
-## Adding a New Function App
+### Adding a New Function App
 
 1. Add a boolean parameter in `azure-pipelines.yml`  
 2. Add a new entry in `functionapps.json`  
@@ -129,7 +129,7 @@ No changes are required to deployment logic.
 
 ---
 
-## Technologies Used
+### Technologies Used
 
 - Azure DevOps YAML Pipelines  
 - Azure CLI  
@@ -141,7 +141,7 @@ No changes are required to deployment logic.
 
 ---
 
-## Use Cases
+### Use Cases
 
 This template is ideal for:
 
