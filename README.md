@@ -108,7 +108,7 @@ For each selected Function App:
 
 ---
 
-### Deployment Strategy
+## Deployment Strategy
 
 This implementation follows a safe release approach:
 
@@ -120,7 +120,7 @@ This implementation follows a safe release approach:
 
 ---
 
-### Adding a New Function App
+## Adding a New Function App
 
 1. Add a boolean parameter in `azure-pipelines.yml`  
 2. Add a new entry in `functionapps.json`  
@@ -130,7 +130,7 @@ No changes are required to deployment logic.
 
 ---
 
-### Technologies Used
+## Technologies Used
 
 - Azure DevOps YAML Pipelines  
 - Azure CLI  
@@ -142,7 +142,7 @@ No changes are required to deployment logic.
 
 ---
 
-### Use Cases
+## Use Cases
 
 This template is ideal for:
 
@@ -153,7 +153,7 @@ This template is ideal for:
 
 ---
 
-### Prerequisites
+## Prerequisites
 
 Before using this template, configure:
 
@@ -164,7 +164,7 @@ Before using this template, configure:
 
 ---
 
-### Using This as a Template
+## Using This as a Template
 
 1. Click **"Use this template"**  
 2. Create your repository  
@@ -176,7 +176,7 @@ Before using this template, configure:
 
 ---
 
-### Benefits
+## Benefits
 
 - Centralized release management  
 - Reduced manual deployment errors  
