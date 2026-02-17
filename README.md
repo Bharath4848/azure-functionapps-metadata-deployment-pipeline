@@ -1,100 +1,90 @@
-Azure Function Apps – Metadata-Driven Deployment Pipeline
+# Azure Function Apps – Metadata-Driven Deployment Pipeline
 
-A production-grade Azure DevOps YAML pipeline that dynamically builds and deploys multiple Azure Function Apps using:
+A production-grade Azure DevOps YAML pipeline for dynamically building and deploying multiple Azure Function Apps using runtime UI selection and metadata configuration.
 
-✅ Runtime UI parameters (checkbox selection)
+---
 
-✅ JSON metadata configuration
+## Overview
 
-✅ Multi-slot deployment (DevTest → Staging → Production)
+This repository provides a scalable and enterprise-ready Azure DevOps pipeline that:
 
-✅ Safe zero-downtime slot swap
+- Builds and deploys multiple Azure Function Apps
+- Allows runtime selection from the pipeline UI
+- Uses JSON metadata instead of hardcoded values
+- Supports multi-slot deployments (DevTest → Staging → Production)
+- Enables zero-downtime production releases using slot swap
 
-✅ Scalable architecture for 1 → N apps
+This template is designed for teams managing multiple Function Apps who require centralized, safe, and automated deployments.
 
-🎯 Key Features
+---
 
-Deploy individual function apps from pipeline UI
+## Architecture Flow
 
-“Deploy All” override option
-
-Metadata-driven app configuration (no hardcoding)
-
-Slot-based blue/green release strategy
-
-Zero manual publish from Visual Studio
-
-Enterprise-ready structure
-
-Easily extensible for 50+ apps
-
-🏗 Architecture Overview
-Pipeline Parameters (UI)
-        ↓
+Pipeline Runtime Parameters (UI)
+↓
 functionapps.json (Metadata)
-        ↓
+↓
 Dynamic Build + Publish
-        ↓
+↓
 ZIP Packaging
-        ↓
-Deploy to DevTest
-        ↓
-Deploy to Staging
-        ↓
+↓
+Deploy to DevTest Slot
+↓
+Deploy to Staging Slot
+↓
 Slot Swap → Production
 
-💡 Why This Matters
 
-Managing many Azure Function Apps manually leads to:
+---
 
-Inconsistent deployments
+## Key Features
 
-Production risk
+- Runtime checkbox selection of Function Apps
+- “Deploy All” override option
+- Metadata-driven configuration (no hardcoding in pipeline logic)
+- Multi-slot deployment strategy
+- Zero-downtime blue/green release model
+- Scales from 1 to N Function Apps
+- Enterprise-ready structure
 
-Manual effort
+---
 
-No release governance
+## Repository Structure
 
-This pipeline solves that with a scalable and centralized deployment strategy.
+├── .azure-pipelines/
+│ └── azure-pipelines.yml
+├── config/
+│ └── functionapps.json
+├── README.md
+└── .gitignore
 
-🔧 Technologies Used
 
-Azure DevOps YAML
+---
 
-Azure CLI
+## How It Works
 
-PowerShell
+### 1. Runtime Selection
 
-.NET 8
+When running the pipeline manually:
 
-Azure Function Apps
+- Select individual Function Apps using checkboxes
+- OR enable "Deploy All" to deploy every app listed in metadata
 
-Deployment Slots
+---
 
-JSON metadata configuration
+### 2. Metadata Configuration
 
-📈 Ideal For
+Function Apps are defined inside:
 
-Enterprises managing multiple Function Apps
+`config/functionapps.json`
 
-DevOps engineers building reusable templates
+Example:
 
-Teams implementing CI/CD best practices
-
-Azure platform engineering teams
-
-🔄 How to Use This Template
-
-Click "Use this template"
-
-Create your repository
-
-Update:
-
-Service connection name
-
-Resource group names
-
-Function app names
-
-Commit and run pipeline
+```json
+[
+  {
+    "name": "funcApp01",
+    "path": "src/FunctionApp01/FunctionApp01.csproj",
+    "resourceGroup": "rg-functionapps-dev"
+  }
+]
