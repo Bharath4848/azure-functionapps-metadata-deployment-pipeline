@@ -20,6 +20,8 @@ This template is designed for teams managing multiple Function Apps who require 
 
 ## Architecture Flow
 
+```text
+
 Pipeline Runtime Parameters (UI)
 ↓
 functionapps.json (Metadata)
@@ -34,6 +36,7 @@ Deploy to Staging Slot
 ↓
 Slot Swap → Production
 
+```
 
 ---
 
@@ -51,13 +54,14 @@ Slot Swap → Production
 
 ## Repository Structure
 
+```text
 ├── .azure-pipelines/
 │ └── azure-pipelines.yml
 ├── config/
 │ └── functionapps.json
 ├── README.md
 └── .gitignore
-
+```
 
 ---
 
