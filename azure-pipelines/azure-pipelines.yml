@@ -129,16 +129,13 @@ stages:
               exit 1
             }
 
-            Write-Host "Using Telerik Username: $env:telerikUsername"
-
-            Write-Host "Configuring Telerik NuGet feed..."
-            dotnet nuget remove source telerik 2>$null
-
-            dotnet nuget add source "https://nuget.telerik.com/v3/index.json" `
-              --name telerik `
-              --username "$env:telerikUsername" `
-              --password "$env:telerikPassword" `
-              --store-password-in-clear-text
+            # ── NuGet Feed Configuration ─────────────────────────────────
+            # If you have a private NuGet feed (e.g. Azure Artifacts),
+            # add it as an additional --source below.
+            # If you use a feed that requires authentication (e.g. Telerik),
+            # add dotnet nuget add source here with your credentials
+            # stored as pipeline secret variables.
+            # ─────────────────────────────────────────────────────────────
 
             $publishRoot = "$(Build.ArtifactStagingDirectory)\publish"
             $zipRoot = "$(Build.ArtifactStagingDirectory)\function_zips"
@@ -159,17 +156,13 @@ stages:
               dotnet restore "$projectPath" `
                 --source "https://api.nuget.org/v3/index.json" `
                 --source "https://pkgs.dev.azure.com/your-org/_packaging/generic-feed/nuget/v3/index.json" `
-                --source "https://nuget.thirdpartyvendor.com/v3/index.json"
                 
               dotnet build "$projectPath" --configuration $(buildConfiguration)
               dotnet publish "$projectPath" --configuration $(buildConfiguration) --output $outputPath
 
               Compress-Archive -Path "$outputPath\*" -DestinationPath $zipFile -Force
               Write-Host " Created ZIP for $($app.name)"
-            }
-        env:
-          telerikUsername: $(telerikUsername)
-          telerikPassword: $(telerikPassword)    
+            }    
         
       - task: PublishPipelineArtifact@1
         displayName: ' Publish Build Artifacts'
@@ -290,6 +283,97 @@ stages:
                   Write-Error "Deployment failed: $($_.Exception.Message)"
               }
 
+        - task: AzureCLI@2
+          displayName: "Apply App Settings to devtest slot"
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              try {
+                  # Parse parameter JSON
+                  $jsonString = @'
+              ${{ variables.paramJson }}
+              '@
+                  $paramJson = $jsonString | ConvertFrom-Json
+
+                  # Load Functionapps.json
+                  $appsFile = "$(System.DefaultWorkingDirectory)/config/Functionapps.json"
+                  if (-not (Test-Path $appsFile)) {
+                      Write-Error "Functionapps.json not found at $appsFile"
+                      exit 1
+                  }
+
+                  $apps = Get-Content $appsFile | ConvertFrom-Json
+                  $selectedApps = @()
+
+                  if ($paramJson.deployAll -eq $true) {
+                      Write-Host "DeployAll = true; applying settings for all apps."
+                      $selectedApps = $apps
+                  }
+                  else {
+                      foreach ($app in $apps) {
+                          $paramName = $app.name
+                          if ($paramJson.PSObject.Properties.Name -contains $paramName) {
+                              $paramValue = $paramJson.$paramName
+                              if ($paramValue -eq $true) {
+                                  $selectedApps += $app
+                              }
+                          }
+                      }
+                  }
+
+                  if ($selectedApps.Count -eq 0) {
+                      Write-Warning "No apps selected skipping app settings update."
+                      exit 0
+                  }
+
+                  foreach ($app in $selectedApps) {
+                      $settingsFile = "$(System.DefaultWorkingDirectory)/appsettings/$($app.name)/devtest_appsettings.json"
+
+                      Write-Host "==========================================="
+                      Write-Host " App Settings: $($app.name)"
+                      Write-Host " Settings file: $settingsFile"
+                      Write-Host "==========================================="
+
+                      if (-not (Test-Path $settingsFile)) {
+                          Write-Warning "No settings file found for $($app.name) at $settingsFile skipping."
+                          continue
+                      }
+
+                      $settings = Get-Content $settingsFile | ConvertFrom-Json
+
+                      if ($settings.PSObject.Properties.Count -eq 0) {
+                          Write-Warning "Settings file is empty for $($app.name) skipping."
+                          continue
+                      }
+
+                      # Build key=value array expected by az cli
+                      $settingsArgs = $settings.PSObject.Properties | ForEach-Object { "$($_.Name)=$($_.Value)" }
+
+                      Write-Host "Applying $($settings.PSObject.Properties.Count) setting(s) to $($app.name) devtest slot..."
+
+                      az functionapp config appsettings set `
+                          --name $app.name `
+                          --resource-group $app.resourceGroup `
+                          --slot devtest `
+                          --settings @settingsArgs `
+                          --output none
+
+                      if ($LASTEXITCODE -eq 0) {
+                          Write-Host "Successfully applied app settings for $($app.name)"
+                      } else {
+                          Write-Error "Failed to apply app settings for $($app.name)"
+                          exit 1
+                      }
+                  }
+
+                  Write-Host "All selected Function App settings have been updated."
+              }
+              catch {
+                  Write-Error "App settings update failed: $($_.Exception.Message)"
+              }      
+
 # ============================================================
 #  STAGE: Deploy Function Apps to Staging Slot
 # ============================================================
@@ -405,6 +489,97 @@ stages:
               catch {
                   Write-Error "Deployment failed: $($_.Exception.Message)"
               }
+            
+        - task: AzureCLI@2
+          displayName: "Apply App Settings to staging slot"
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              try {
+                  # Parse parameter JSON
+                  $jsonString = @'
+              ${{ variables.paramJson }}
+              '@
+                  $paramJson = $jsonString | ConvertFrom-Json
+
+                  # Load Functionapps.json
+                  $appsFile = "$(System.DefaultWorkingDirectory)/config/Functionapps.json"
+                  if (-not (Test-Path $appsFile)) {
+                      Write-Error "Functionapps.json not found at $appsFile"
+                      exit 1
+                  }
+
+                  $apps = Get-Content $appsFile | ConvertFrom-Json
+                  $selectedApps = @()
+
+                  if ($paramJson.deployAll -eq $true) {
+                      Write-Host "DeployAll = true; applying settings for all apps."
+                      $selectedApps = $apps
+                  }
+                  else {
+                      foreach ($app in $apps) {
+                          $paramName = $app.name
+                          if ($paramJson.PSObject.Properties.Name -contains $paramName) {
+                              $paramValue = $paramJson.$paramName
+                              if ($paramValue -eq $true) {
+                                  $selectedApps += $app
+                              }
+                          }
+                      }
+                  }
+
+                  if ($selectedApps.Count -eq 0) {
+                      Write-Warning "No apps selected skipping app settings update."
+                      exit 0
+                  }
+
+                  foreach ($app in $selectedApps) {
+                      $settingsFile = "$(System.DefaultWorkingDirectory)/appsettings/$($app.name)/staging_appsettings.json"
+
+                      Write-Host "==========================================="
+                      Write-Host " App Settings: $($app.name)"
+                      Write-Host " Settings file: $settingsFile"
+                      Write-Host "==========================================="
+
+                      if (-not (Test-Path $settingsFile)) {
+                          Write-Warning "No settings file found for $($app.name) at $settingsFile skipping."
+                          continue
+                      }
+
+                      $settings = Get-Content $settingsFile | ConvertFrom-Json
+
+                      if ($settings.PSObject.Properties.Count -eq 0) {
+                          Write-Warning "Settings file is empty for $($app.name) skipping."
+                          continue
+                      }
+
+                      # Build key=value array expected by az cli
+                      $settingsArgs = $settings.PSObject.Properties | ForEach-Object { "$($_.Name)=$($_.Value)" }
+
+                      Write-Host "Applying $($settings.PSObject.Properties.Count) setting(s) to $($app.name) staging slot..."
+
+                      az functionapp config appsettings set `
+                          --name $app.name `
+                          --resource-group $app.resourceGroup `
+                          --slot staging `
+                          --settings @settingsArgs `
+                          --output none
+
+                      if ($LASTEXITCODE -eq 0) {
+                          Write-Host "Successfully applied app settings for $($app.name)"
+                      } else {
+                          Write-Error "Failed to apply app settings for $($app.name)"
+                          exit 1
+                      }
+                  }
+
+                  Write-Host "All selected Function App settings have been updated."
+              }
+              catch {
+                  Write-Error "App settings update failed: $($_.Exception.Message)"
+              }      
 
     # --------------------------------------------------------
     # JOB 2 — Swap staging slot → production
@@ -477,4 +652,95 @@ stages:
               }
               catch {
                   Write-Error "Slot swap failed: $($_.Exception.Message)"
+                  exit 1
               }
+
+        - task: AzureCLI@2
+          displayName: "Apply App Settings to production"
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              try {
+                  # Parse parameter JSON
+                  $jsonString = @'
+              ${{ variables.paramJson }}
+              '@
+                  $paramJson = $jsonString | ConvertFrom-Json
+
+                  # Load Functionapps.json
+                  $appsFile = "$(System.DefaultWorkingDirectory)/config/Functionapps.json"
+                  if (-not (Test-Path $appsFile)) {
+                      Write-Error "Functionapps.json not found at $appsFile"
+                      exit 1
+                  }
+
+                  $apps = Get-Content $appsFile | ConvertFrom-Json
+                  $selectedApps = @()
+
+                  if ($paramJson.deployAll -eq $true) {
+                      Write-Host "DeployAll = true; applying settings for all apps."
+                      $selectedApps = $apps
+                  }
+                  else {
+                      foreach ($app in $apps) {
+                          $paramName = $app.name
+                          if ($paramJson.PSObject.Properties.Name -contains $paramName) {
+                              $paramValue = $paramJson.$paramName
+                              if ($paramValue -eq $true) {
+                                  $selectedApps += $app
+                              }
+                          }
+                      }
+                  }
+
+                  if ($selectedApps.Count -eq 0) {
+                      Write-Warning "No apps selected skipping app settings update."
+                      exit 0
+                  }
+
+                  foreach ($app in $selectedApps) {
+                      $settingsFile = "$(System.DefaultWorkingDirectory)/appsettings/$($app.name)/production_appsettings.json"
+
+                      Write-Host "==========================================="
+                      Write-Host " App Settings: $($app.name)"
+                      Write-Host " Settings file: $settingsFile"
+                      Write-Host "==========================================="
+
+                      if (-not (Test-Path $settingsFile)) {
+                          Write-Warning "No settings file found for $($app.name) at $settingsFile skipping."
+                          continue
+                      }
+
+                      $settings = Get-Content $settingsFile | ConvertFrom-Json
+
+                      if ($settings.PSObject.Properties.Count -eq 0) {
+                          Write-Warning "Settings file is empty for $($app.name) skipping."
+                          continue
+                      }
+
+                      # Build key=value array expected by az cli
+                      $settingsArgs = $settings.PSObject.Properties | ForEach-Object { "$($_.Name)=$($_.Value)" }
+
+                      Write-Host "Applying $($settings.PSObject.Properties.Count) setting(s) to $($app.name) "
+
+                      az functionapp config appsettings set `
+                          --name $app.name `
+                          --resource-group $app.resourceGroup `
+                          --settings @settingsArgs `
+                          --output none
+
+                      if ($LASTEXITCODE -eq 0) {
+                          Write-Host "Successfully applied app settings for $($app.name)"
+                      } else {
+                          Write-Error "Failed to apply app settings for $($app.name)"
+                          exit 1
+                      }
+                  }
+
+                  Write-Host "All selected Function App settings have been updated."
+              }
+              catch {
+                  Write-Error "App settings update failed: $($_.Exception.Message)"
+              }      

@@ -2,26 +2,26 @@
   {
     "name": "funcApp01",
     "path": "src/FunctionApp01/FunctionApp01.csproj",
-    "resourceGroup": "rg-functionapps-dev"
+    "resourceGroup": "rg-functionapps-01"
   },
   {
     "name": "funcApp02",
     "path": "src/FunctionApp02/FunctionApp02.csproj",
-    "resourceGroup": "rg-functionapps-dev"
+    "resourceGroup": "rg-functionapps-02"
   },
   {
     "name": "funcApp03",
     "path": "src/FunctionApp03/FunctionApp03.csproj",
-    "resourceGroup": "rg-functionapps-dev"
+    "resourceGroup": "rg-functionapps-03"
   },
   {
     "name": "funcApp04",
     "path": "src/FunctionApp04/FunctionApp04.csproj",
-    "resourceGroup": "rg-functionapps-dev"
+    "resourceGroup": "rg-functionapps-04"
   },
   {
     "name": "funcApp05",
     "path": "src/FunctionApp05/FunctionApp05.csproj",
-    "resourceGroup": "rg-functionapps-dev"
+    "resourceGroup": "rg-functionapps-05"
   }
 ]
