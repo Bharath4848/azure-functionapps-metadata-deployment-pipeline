@@ -15,7 +15,7 @@ This repository provides a scalable and enterprise-ready Azure DevOps pipeline t
 - Enables zero-downtime production releases using slot swap
 - Manages environment-specific app settings per Function App per slot
 
-This template is designed for teams managing multiple Function Apps who require centralized, safe, and automated deployments.
+This template is designed for teams managing multiple Function Apps that require centralized, safe, and automated deployments.
 
 ---
 
