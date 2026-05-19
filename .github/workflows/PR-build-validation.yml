@@ -1,0 +1,34 @@
+name: PR Build Validation
+
+# Trigger the workflow only when a PR is opened or updated against the main branch
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  dotnet-validate:
+    name: .NET Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Fetch the code from the PR branch
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Set up the .NET SDK environment
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x' # Matches standard modern Azure Function apps
+
+    # 3. Restore external NuGet packages
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    # 4. Compile the project to ensure there are no syntax or build errors
+    - name: Build Project
+      run: dotnet build --configuration Release --no-restore
+
+    # 5. Execute Unit Tests (will safely pass if no test projects exist)
+    - name: Run Tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
