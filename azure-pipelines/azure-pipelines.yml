@@ -135,7 +135,7 @@ stages:
             # If you use a feed that requires authentication (e.g. Telerik),
             # add dotnet nuget add source here with your credentials
             # stored as pipeline secret variables.
-            # ─────────────────────────────────────────────────────────────
+            # ────────────────────────────────────────────────────────────�[...]
 
             $publishRoot = "$(Build.ArtifactStagingDirectory)\publish"
             $zipRoot = "$(Build.ArtifactStagingDirectory)\function_zips"
@@ -744,3 +744,137 @@ stages:
               catch {
                   Write-Error "App settings update failed: $($_.Exception.Message)"
               }      
+
+
+# ============================================================
+#  STAGE: Post-swap cleanup - stop staging slots & enable prod
+# ============================================================
+- stage: PostSwap_Cleanup
+  displayName: "Post-swap: Stop staging slots and Start production"
+  dependsOn: Deploy_Staging
+  condition: and(succeeded(), eq(${{ parameters.swapToProd }}, true))
+  variables:
+    paramJson: ${{ convertToJson(parameters) }}
+
+  jobs:
+    - job: Cleanup
+      displayName: " Stop staging slots and enable production"
+      pool:
+        vmImage: 'windows-latest'
+
+      steps:
+        - checkout: self
+
+        - task: AzureCLI@2
+          displayName: "Stop staging slots"
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              try {
+                  $jsonString = @'
+              ${{ variables.paramJson }}
+              '@
+                  $paramJson = $jsonString | ConvertFrom-Json
+
+                  # Load Functionapps.json
+                  $appsFile = "$(System.DefaultWorkingDirectory)/config/Functionapps.json"
+                  if (-not (Test-Path $appsFile)) {
+                      Write-Error "Functionapps.json not found at $appsFile"
+                      exit 1
+                  }
+
+                  $apps = Get-Content $appsFile | ConvertFrom-Json
+                  $selectedApps = @()
+
+                  if ($paramJson.deployAll -eq $true) {
+                      $selectedApps = $apps
+                  } else {
+                      foreach ($app in $apps) {
+                          $paramName = $app.name
+                          if ($paramJson.PSObject.Properties.Name -contains $paramName) {
+                              $paramValue = $paramJson.$paramName
+                              if ($paramValue -eq $true) {
+                                  $selectedApps += $app
+                              }
+                          }
+                      }
+                  }
+
+                  if ($selectedApps.Count -eq 0) {
+                      Write-Host "No apps selected for cleanup."
+                      exit 0
+                  }
+
+                  foreach ($app in $selectedApps) {
+                      Write-Host "Stopping staging slot for $($app.name)..."
+                      az functionapp stop --name $app.name --resource-group $app.resourceGroup --slot staging --only-show-errors
+                      if ($LASTEXITCODE -eq 0) {
+                          Write-Host "Stopped staging slot for $($app.name)"
+                      } else {
+                          Write-Warning "Failed to stop staging slot for $($app.name)"
+                      }
+                  }
+              }
+              catch {
+                  Write-Error "Stopping staging slots failed: $($_.Exception.Message)"
+                  exit 1
+              }
+
+        - task: AzureCLI@2
+          displayName: "Start/Enable production apps"
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              try {
+                  $jsonString = @'
+              ${{ variables.paramJson }}
+              '@
+                  $paramJson = $jsonString | ConvertFrom-Json
+
+                  # Load Functionapps.json
+                  $appsFile = "$(System.DefaultWorkingDirectory)/config/Functionapps.json"
+                  if (-not (Test-Path $appsFile)) {
+                      Write-Error "Functionapps.json not found at $appsFile"
+                      exit 1
+                  }
+
+                  $apps = Get-Content $appsFile | ConvertFrom-Json
+                  $selectedApps = @()
+
+                  if ($paramJson.deployAll -eq $true) {
+                      $selectedApps = $apps
+                  } else {
+                      foreach ($app in $apps) {
+                          $paramName = $app.name
+                          if ($paramJson.PSObject.Properties.Name -contains $paramName) {
+                              $paramValue = $paramJson.$paramName
+                              if ($paramValue -eq $true) {
+                                  $selectedApps += $app
+                              }
+                          }
+                      }
+                  }
+
+                  if ($selectedApps.Count -eq 0) {
+                      Write-Host "No apps selected for starting production."
+                      exit 0
+                  }
+
+                  foreach ($app in $selectedApps) {
+                      Write-Host "Starting production for $($app.name)..."
+                      az functionapp start --name $app.name --resource-group $app.resourceGroup --only-show-errors
+                      if ($LASTEXITCODE -eq 0) {
+                          Write-Host "Started production for $($app.name)"
+                      } else {
+                          Write-Warning "Failed to start production for $($app.name)"
+                      }
+                  }
+              }
+              catch {
+                  Write-Error "Starting production apps failed: $($_.Exception.Message)"
+                  exit 1
+              }
