@@ -1,0 +1,6 @@
+{
+  "APP_ENV": "staging",
+  "ConnectionString__Storage": "DefaultEndpointsProtocol=https;AccountName=stagingstorage;AccountKey=<key>;EndpointSuffix=core.windows.net",
+  "LOG_LEVEL": "Information",
+  "FEATURE_FLAG_SAMPLE": "false"
+}

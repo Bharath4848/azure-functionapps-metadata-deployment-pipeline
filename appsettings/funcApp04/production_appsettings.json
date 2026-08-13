@@ -1,0 +1,6 @@
+{
+  "APP_ENV": "production",
+  "ConnectionString__Storage": "DefaultEndpointsProtocol=https;AccountName=prodstorage;AccountKey=<key>;EndpointSuffix=core.windows.net",
+  "LOG_LEVEL": "Warning",
+  "FEATURE_FLAG_SAMPLE": "false"
+}
